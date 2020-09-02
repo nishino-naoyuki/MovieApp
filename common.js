@@ -3,8 +3,8 @@ const TYPE_YOUTUBE = 1;
 const NO_REPEAT = 0;
 const REPEAT = -1;
 
-const loadSetting = () =>{
-	var getjson = localStorage.getItem('setting');
+const loadSetting = (settingName) =>{
+	var getjson = localStorage.getItem(settingName);
 	//alert(getjson);
 	if( getjson == ""){
 		return null;
@@ -15,16 +15,16 @@ const loadSetting = () =>{
 	return list;
 }
 
-const clearSettingForDebug = () =>{
-	localStorage.setItem('setting',"");
+const clearSettingForDebug = (settingName) =>{
+	localStorage.setItem(settingName,"");
 }
 
-//local storage‚É•Û‘¶‚·‚é
-const insertStorage = (page,type,value,time,startTime,endTime,repeat=NO_REPEAT) => {
-	//Œ»ó‚ğ“Ç‚İ‚İ
+//local storageã«ä¿å­˜ã™ã‚‹
+const insertStorage = (settingName,page,type,value,time,startTime,endTime,repeat=NO_REPEAT) => {
+	//ç¾çŠ¶ã‚’èª­ã¿è¾¼ã¿
 	var list = loadSetting();
 	
-	//İ’è‚ğ’Ç‰Á
+	//è¨­å®šã‚’è¿½åŠ 
 	var addData = {"page":1,"type":1,"value":1,"startTime":0,"endTime":0,"repeat":0,"time":0};
 	
 	addData.page = page;
@@ -38,23 +38,37 @@ const insertStorage = (page,type,value,time,startTime,endTime,repeat=NO_REPEAT) 
 	if( list != null ){
 		list.push(addData);
 		var jsonString = JSON.stringify(list);
-		localStorage.setItem('setting',jsonString);
+		localStorage.setItem(settingName,jsonString);
 	}else{
 		var jsonString = JSON.stringify(addData);
-		localStorage.setItem('setting',"["+jsonString+"]");
+		localStorage.setItem(settingName,"["+jsonString+"]");
 	}
 }
 
-//JSONƒf[ƒ^‚Ì”z—ñ‚ğ“o˜^‚·‚é
-const insertJSONList = (jsonList)=>{
-	localStorage.setItem('setting',"");
+//æœ€å¾Œã«è¨­å®šã—ãŸç«¶ã£ã¦åã‚’å–å¾—ã™ã‚‹
+const getLastSettingName = () =>{
+	var lastSetting = localStorage.getItem("last_setting");
+	//alert(getjson);
+	if( lastSetting == null || lastSetting == "" ){
+		return "è¨­å®šå";
+	}
+	
+	return lastSetting;
+}
+
+//JSONãƒ‡ãƒ¼ã‚¿ã®é…åˆ—ã‚’ç™»éŒ²ã™ã‚‹
+const insertJSONList = (settingName,jsonList)=>{
+	localStorage.setItem(settingName,"");
 	var jsonString = JSON.stringify(jsonList);
-	localStorage.setItem('setting',jsonString);
+	localStorage.setItem(settingName,jsonString);
+	
+	//æœ€å¾Œã®è¨­å®šåã‚’ã‚»ãƒƒãƒˆã™ã‚‹
+	localStorage.setItem("last_setting",settingName);
 }
 
 const createJSON = (page,type,value,time,startTime,endTime,repeat=NO_REPEAT) => {
 
-	//İ’è‚ğ’Ç‰Á
+	//è¨­å®šã‚’è¿½åŠ 
 	var addData = {"page":1,"type":1,"value":1,"startTime":0,"endTime":0,"repeat":0,"time":0};
 	
 	addData.page = page;
@@ -75,12 +89,12 @@ const getYoutubeID = (url) => {
 	return url.slice( url.lastIndexOf('v=')+2 );
 }
 
-//Ÿ‚Ìƒy[ƒW”‚ğæ“¾‚·‚é
+//æ¬¡ã®ãƒšãƒ¼ã‚¸æ•°ã‚’å–å¾—ã™ã‚‹
 const getNextPage = (page) => {
 	var list = loadSetting();
 	
 	page++;
-	//MAXƒy[ƒWˆÈã‚É‚È‚Á‚½‚ç1‚É–ß‚é
+	//MAXãƒšãƒ¼ã‚¸ä»¥ä¸Šã«ãªã£ãŸã‚‰1ã«æˆ»ã‚‹
 	if( list.length < page ){
 		page = 1;
 	}
@@ -88,13 +102,13 @@ const getNextPage = (page) => {
 	return page;
 }
 
-//w’è‚µ‚½ƒy[ƒW‚Ìİ’è‚ğ“Ç‚İ‚Ş
+//æŒ‡å®šã—ãŸãƒšãƒ¼ã‚¸ã®è¨­å®šã‚’èª­ã¿è¾¼ã‚€
 const getStorage = (page) => {
-	//Œ»ó‚ğ“Ç‚İ‚İ
+	//ç¾çŠ¶ã‚’èª­ã¿è¾¼ã¿
 	var list = loadSetting();
 	var obj;
 	
-	//MAXƒy[ƒWˆÈã‚É‚È‚Á‚½‚ç1‚É–ß‚é
+	//MAXãƒšãƒ¼ã‚¸ä»¥ä¸Šã«ãªã£ãŸã‚‰1ã«æˆ»ã‚‹
 	if( list.length < page ){
 		page = 1;
 	}
@@ -109,17 +123,17 @@ const getStorage = (page) => {
 	return obj;
 }
 
-//ƒy[ƒWØ‚è‘Ö‚¦
+//ãƒšãƒ¼ã‚¸åˆ‡ã‚Šæ›¿ãˆ
 const changeNextPage = (nextpage)=>{
 
-	//Ÿƒy[ƒW‚Ìî•ñ‚ğæ“¾
+	//æ¬¡ãƒšãƒ¼ã‚¸ã®æƒ…å ±ã‚’å–å¾—
 	var netxtPage = getStorage(nextpage);
 	if( netxtPage == null ){
-		alert("İ’è‚ª‚ ‚è‚Ü‚¹‚ñBİ’è‚ğs‚Á‚Ä‚©‚ç‹N“®‚µ‚Ä‚­‚¾‚³‚¢");
+		alert("è¨­å®šãŒã‚ã‚Šã¾ã›ã‚“ã€‚è¨­å®šã‚’è¡Œã£ã¦ã‹ã‚‰èµ·å‹•ã—ã¦ãã ã•ã„");
 		return;
 	}
 	
-	//ƒy[ƒWØ‚è‘Ö‚¦
+	//ãƒšãƒ¼ã‚¸åˆ‡ã‚Šæ›¿ãˆ
     if( netxtPage.type == TYPE_MOVIE ){
 	    window.location.href="move.html?value="+nextpage;
     }else{
@@ -135,13 +149,13 @@ const isYoutubeURL = (name)=> {
 	}
 }
 
-//•¶š—ñ‚©‚çŠg’£q‚ğæ‚èo‚·BŠg’£q‚ª–³‚¢ê‡‚Ínull‚ğ•Ô‚·
+//æ–‡å­—åˆ—ã‹ã‚‰æ‹¡å¼µå­ã‚’å–ã‚Šå‡ºã™ã€‚æ‹¡å¼µå­ãŒç„¡ã„å ´åˆã¯nullã‚’è¿”ã™
 const getExt = (filename)=>{
 	var ext = filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2);
 	return ( ext == "" ? null:ext );
 }
 
-//İ’è‚³‚ê‚½“à‚©‚Ç‚¤‚©‚ğ•Ô‚·
+//è¨­å®šã•ã‚ŒãŸæ™‚åˆ»å†…ã‹ã©ã†ã‹ã‚’è¿”ã™
 const isTimeIn = ( pageeData )=>{
 	const now = new Date();
 	let nowH = now.getHours();
@@ -150,7 +164,7 @@ const isTimeIn = ( pageeData )=>{
 	//alert(pageeData.startTime);
 	//alert(pageeData.startTime.split(":"));
 	
-	//ŠJnŠÔ
+	//é–‹å§‹æ™‚é–“
 	let startTimes = pageeData.startTime.split(":");
 	//alert(startTimes);
 	if( startTimes.length != 2 ){
@@ -161,7 +175,7 @@ const isTimeIn = ( pageeData )=>{
 		startM = startTimes[1];
 	}
 	
-	//I—¹ŠÔ
+	//çµ‚äº†æ™‚é–“
 	let endTimes = pageeData.endTime.split(":");
 	//alert(endTimes);
 	if( endTimes.length != 2 ){

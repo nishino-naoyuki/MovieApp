@@ -21,6 +21,16 @@
                 
                 <div class="card-body">
                   <form class="setting-list">
+                    <div class="row">
+                      <div class="col-md-10">
+                        <div class="form-group">
+                          <p>
+                            <label class="bmd-label-floating">設定名</label>
+                            <input type="text" class="form-control" id="settingName" >
+                          </p>
+                        </div>
+                      </div>                      
+                    </div>
                   </form>
                   <button type="button" class="btn btn-primary" id="setting-add">追加</button>
                   <button type="button" class="btn btn-success" id="setting-entry">登録</button>
@@ -78,8 +88,12 @@
 <script>
 	var dataNum = 0;
 	$(document).ready(function(){
+		//最後に設定した競って名を取得
+		var lastSettingName = getLastSettingName();
+		$("#settingName").val(lastSettingName);
+		
 		//現在の設定を取得
-		var list = loadSetting();
+		var list = loadSetting(lastSettingName);
 		
 		if( list != null ){
 		
@@ -205,6 +219,8 @@
 				jsonParam.push( wkJson );
 			}
 		}
+		var settingName = $("#settingName").val();
+		alert(settingName);
 		//ソートする
 		jsonParam.sort(compare);
 		//念のためページ番号を振りなおす（歯抜け防止）
@@ -212,7 +228,7 @@
 			jsonParam[i].page = i+1;
 		}
 		//データを作成しなおす
-		insertJSONList( jsonParam );
+		insertJSONList( settingName,jsonParam );
 		alert("登録が完了しました");
 	});
 	
