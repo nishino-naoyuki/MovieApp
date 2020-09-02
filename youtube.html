@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja" xml:lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>YouTube動画の再生終了後にリダイレクトで別のページに自動的に移動させる仕組み（IFrameプレーヤーAPI（JavaScript））</title>
+	
+	<link rel="stylesheet" href="main.css">
+  <script src="common.js"></script>
+  <style type="text/css">
+	body {
+	    overflow:hidden;
+	}
+</style>
+</head>
+  <body>
+<div class="top-movie-box">
+  <div id="cover" class="movie-cover">
+    <div id="movie"></div>
+  </div>
+</div>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-143297-8"></script>
+<script>
+  
+var query = location.search;
+var valuelist = query.split('=');
+var value = 1;
+var timer;
+
+
+const changeDisp = ()=>{
+    if(timer != null ) window.clearTimeout(timer);
+	value = getNextPage( parseInt(value) );
+	//alert("ENDED:"+value);
+	//次ページ切り替え
+	changeNextPage(value);
+}
+
+if( valuelist == "" || valuelist == null ){
+	value = 1;
+}else{
+	value = decodeURIComponent(valuelist[1])
+}
+
+//ページに設定を取得する
+var pageSetting = getStorage(value);
+
+//時間設定があるならタイマーをセット
+if( pageSetting.time != undefined && pageSetting.time > 0 ){
+	setTimeout(changeDisp,pageSetting.time*1000);
+}
+
+
+//時間外なら次の画面へ
+if( isTimeIn(pageSetting) == false){
+	changeDisp();
+}
+
+  /*動画のアスペクト比が16:9以外の時はmovie_reSizeの第二引数で指定してください。*/
+  
+  
+  movie_reSize('cover');
+  window.onload = function(){
+    movie_reSize('cover');
+  };
+  window.onresize = function(){
+    movie_reSize('cover');
+  }
+  /*
+  * target  → (string) 合わせる要素のIDを指定
+  * size     → (string)動画の比率を指定、初期値'16:9'
+  */
+  function movie_reSize(target,size){
+    if(typeof size === 'undefined'){
+      size = '16:9';
+    }
+    sizeArray = size.split(':');
+    sizeArray[0] = Number(sizeArray[0]);
+    sizeArray[1] = Number(sizeArray[1]);
+    if(!target ||  sizeArray[0] == 'NaN' || sizeArray[1] == 'NaN'){
+      console.log('値が正しくありません。');
+      return false;
+    }else{
+    var $cover = document.getElementById(target),
+        $movieContent = document.getElementById('movie'),
+        coverWidth = $cover.getBoundingClientRect().width,
+        coverHeight = $cover.getBoundingClientRect().height,
+        tatehi = coverHeight / sizeArray[1],
+        yokohi = coverWidth / sizeArray[0],ansWidth,ansHeight;
+    
+    if(tatehi>yokohi){
+      ansHeight = coverHeight;
+      ansWidth = tatehi * sizeArray[0];
+    }else{
+      ansWidth = coverWidth;
+      ansHeight = yokohi * sizeArray[1];
+    }
+    
+    
+    //$movieContent.style.width = ansWidth+'px';
+    //$movieContent.style.height = ansHeight+160+'px';//160は投稿者情報などを消すために着けています。表示させたい場合は+160を消去してください。
+    $movieContent.style.width = window.innerWidth+'px';
+    $movieContent.style.height = window.innerHeight+'px';//160は投稿者情報などを消すために着けています。表示させたい場合は+160を消去してください。
+    }
+  }
+  var tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  var firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  var player;
+  function onYouTubeIframeAPIReady() {
+    var movieId = pageSetting.value; //'8Ayz1oxy6pY';//youtubeの動画のID。再生したい動画のIDを入力。
+    player = new YT.Player('movie', {
+      /*
+      playerVarsで細かい設定ができます。
+      コメントはどんな設定をしているか書いているだけです。
+      */
+      playerVars:{
+        playsinline: 1,
+        autoplay: 1, // 自動再生
+        loop: 0, // ループ有効
+        listType: 'playlist', //リスト再生（ループ再生に必要）
+        playlist: movieId, // 再生する動画リスト（ループ再生に必要）
+        controls: 0, // コントロールバー非表示
+        enablejsapi: 1, //JavaScript API 有効
+        modestbranding:1,//yutubeロゴの非表示
+        iv_load_policy: 3, //動画アノテーションを表示しない
+        disablekb:1, //キーボード操作OFF
+        showinfo:0, //動画の再生が始まる前に動画のタイトルなどの情報を表示しない
+        rel:0, //再生終了時に関連動画を表示しない
+      },
+      videoId:  movieId,
+      events: {
+        'onReady': onPlayerReady,//動画の準備ができたらonPlayerReadyを実行
+        'onStateChange': onPlayerStateChange,
+        'onError': onError,
+      }
+    });
+  }
+  const movie = document.querySelector("#movie");      // フルスクリーンにするオブジェクト
+  
+  
+  function onPlayerReady(e) {
+    //e.target.mute();//音声ミュート
+    e.target.playVideo();//動画スタート（SP用）
+  }
+  function onPlayerStateChange(e){
+  	//alert(e.data);
+    if(e.data == YT.PlayerState.ENDED){
+    	value = getNextPage( parseInt(value) );
+    	//alert("ENDED:"+value);
+    	//次ページ切り替え
+    	changeNextPage(value);
+    }
+  }
+  function onError(e){
+	value = getNextPage( parseInt(value) );
+	//alert("ENDED:"+value);
+	//次ページ切り替え
+	changeNextPage(value);
+  }
+  
+</script>
+
+  </body>
+</html>

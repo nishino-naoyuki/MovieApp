@@ -1,0 +1,45 @@
+html,body{
+  height:100%;
+}
+body{
+  .top-movie-box{
+    height: 100%;
+    position: relative;
+    z-index: 0;
+    overflow: hidden;
+    .movie-cover{
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      transition: opacity 0.5s;
+      &:before{
+        content: '';
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+      #movie{
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        z-index: -1;
+        
+      }
+    }
+  }
+}
+
+* { 
+    margin: 0px; 
+    padding: 0px; 
+}

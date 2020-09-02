@@ -1,0 +1,72 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="video.css">
+  <script src="common.js"></script>
+</head>
+<body>
+<div class="box">
+  <div id="mv"></div>
+  <div class="front"></div>
+</div>
+</body>
+<script>
+
+var query = location.search;
+var valuelist = query.split('=');
+var value = 1;
+var timer;
+
+const changeDisp = ()=>{
+    value = getNextPage( parseInt(value) );
+    //画面切り替え
+    if(timer != null ) window.clearTimeout(timer);
+    changeNextPage(value);
+    video.autoplay=false;
+}
+
+if( valuelist == "" || valuelist == null ){
+	value = 1;
+}else{
+	value = decodeURIComponent(valuelist[1])
+}
+
+//ページに設定を取得する
+var pageSetting = getStorage(value);
+
+//時間設定があるならタイマーをセット
+if( pageSetting.time != undefined && pageSetting.time > 0 ){
+	timer = setTimeout(changeDisp,pageSetting.time*1000);
+}
+
+//時間外なら次の画面へ
+if( isTimeIn(pageSetting) == false){
+	//alert("time out");
+	changeDisp();
+}
+var video = document.createElement('video');
+video.muted = true;
+video.autoplay = true;
+video.loop = (pageSetting.repeat == REPEAT ? true:false);
+video.playsinline = true;
+video.controls = true;
+video.src = "movie/"+pageSetting.value;
+video.addEventListener('play', function() {
+    //alert("play");
+	}, false);
+video.addEventListener('ended', function() {
+    //alert("end");
+    //画面切り替え
+    changeDisp();
+	
+}, false);
+//エラー時は次の画面へ！
+video.addEventListener('error', function() {
+    //画面切り替え
+    
+    changeDisp();
+	}, false);
+document.getElementById('mv').appendChild(video);
+
+</script>
+</html>
