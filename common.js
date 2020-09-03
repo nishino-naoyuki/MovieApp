@@ -3,6 +3,7 @@ const TYPE_YOUTUBE = 1;
 const NO_REPEAT = 0;
 const REPEAT = -1;
 
+
 const loadSetting = (settingName) =>{
 	var getjson = localStorage.getItem(settingName);
 	//alert(getjson);
@@ -22,7 +23,8 @@ const clearSettingForDebug = (settingName) =>{
 //local storageに保存する
 const insertStorage = (settingName,page,type,value,time,startTime,endTime,repeat=NO_REPEAT) => {
 	//現状を読み込み
-	var list = loadSetting();
+	var list = loadSetting(settingName);
+
 	
 	//設定を追加
 	var addData = {"page":1,"type":1,"value":1,"startTime":0,"endTime":0,"repeat":0,"time":0};
@@ -50,7 +52,8 @@ const getLastSettingName = () =>{
 	var lastSetting = localStorage.getItem("last_setting");
 	//alert(getjson);
 	if( lastSetting == null || lastSetting == "" ){
-		return "設定名";
+
+		return "新規設定名";
 	}
 	
 	return lastSetting;
@@ -91,7 +94,7 @@ const getYoutubeID = (url) => {
 
 //次のページ数を取得する
 const getNextPage = (page) => {
-	var list = loadSetting();
+	var list = loadSetting( getLastSettingName() );
 	
 	page++;
 	//MAXページ以上になったら1に戻る
@@ -105,7 +108,7 @@ const getNextPage = (page) => {
 //指定したページの設定を読み込む
 const getStorage = (page) => {
 	//現状を読み込み
-	var list = loadSetting();
+	var list = loadSetting( getLastSettingName() );
 	var obj;
 	
 	//MAXページ以上になったら1に戻る
@@ -142,7 +145,7 @@ const changeNextPage = (nextpage)=>{
 }
 
 const isYoutubeURL = (name)=> {
-	if( name.indexOf("www.youtube.com") > 0 ){
+	if( name.indexOf("www.youtube.com") >= 0 ){
 		return true;
 	}else{
 		return false;
@@ -160,6 +163,9 @@ const isTimeIn = ( pageeData )=>{
 	const now = new Date();
 	let nowH = now.getHours();
 	let nowM = now.getMinutes();
+	let nowMin = nowH*60 + nowM;
+	let startMin = 0;
+	let endMin = 0;
 	
 	//alert(pageeData.startTime);
 	//alert(pageeData.startTime.split(":"));
@@ -174,6 +180,7 @@ const isTimeIn = ( pageeData )=>{
 		startH = startTimes[0];
 		startM = startTimes[1];
 	}
+	startMin = parseInt(startH)*60 + parseInt(startM);
 	
 	//終了時間
 	let endTimes = pageeData.endTime.split(":");
@@ -185,11 +192,41 @@ const isTimeIn = ( pageeData )=>{
 		endH = endTimes[0];
 		endM = endTimes[1];
 	}
+	endMin = parseInt(endH)*60 + parseInt(endM);
 	
-	if(
-		( startH <= nowH && nowH <= endH ) &&
-		( startM <= nowM && nowM <= endM ) ){
+	//alert(startMin + "<=" + nowMin + "<=" + endMin);
+	if( startMin <= nowMin && nowMin <= endMin  ){
 		return true;
 	}
 	return false;
+}
+
+//設定名を設定
+const insertSettingNameToList = (name)=>{
+	//現状データを取得
+	let settingNameList = getSettingNameList();
+	
+	let findFlg = false;
+	for( i = 0; i < settingNameList.length; i++){
+		if( settingNameList[i] == name ){
+			findFlg = true;
+			break;
+		}
+	}
+	
+	if( findFlg != true){
+		settingNameList.push(name);
+		localStorage.setItem("settingNameList", JSON.stringify(settingNameList));
+	}
+	
+}
+
+//設定名を取得
+const getSettingNameList = () =>{
+	let settingNameList = localStorage.getItem('settingNameList');
+	if( settingNameList == null || settingNameList == ""){
+		return JSON.parse("[]");;
+	}
+	
+	return JSON.parse(settingNameList);
 }

@@ -37,8 +37,19 @@ function createWindow() {
   */
   
   // メインウィンドウに表示するURLを指定します
-  // （今回はmain.jsと同じディレクトリのindex.html）
-  mainWindow.loadFile('setting.html');
+  // （今回はmain.jsと同じディレクトリのsetting.html）
+  let args = process.argv;
+  let settingName = "";
+  //引数で設定名を指定されたかを確認する
+  if( args != null ){
+    for( i = 0; i < args.length; i++ ){
+       let index = args[i].indexOf("sn=");
+       if( index >= 0 ){
+          settingName = args[i];
+       }
+    }
+  }
+  mainWindow.loadFile('setting.html',{search:settingName});
 
   // デベロッパーツールの起動
   //mainWindow.webContents.openDevTools();
@@ -70,5 +81,10 @@ const electron = require('electron');
 let {ipcMain} = electron;
 ipcMain.on('resize', function (e) {
     mainWindow.setFullScreen(true);
+});
+
+
+ipcMain.on('close', function (e) {
+    mainWindow.destroy();
 });
 
