@@ -21,10 +21,17 @@
                 
                 <div class="card-body">
                   <form class="setting-list">
+                    <div class="row">
+                      <div class="col-md-10">
+                        <div class="form-group">
+                        </div>
+                      </div>                      
+                    </div>
                   </form>
                   <button type="button" class="btn btn-primary" id="setting-add">追加</button>
-                  <button type="button" class="btn btn-success" id="setting-entry">登録</button>
+                  <button type="button" class="btn btn-success" id="setting-entry">保存</button>
                   <button type="button" class="btn btn-success" id="start">スタート</button>
+                  <button type="button" class="btn btn-light" id="close">閉じる</button>
                 </div><!-- card-body -->
               </div>
             </div>
@@ -77,12 +84,53 @@
   <script src="material-dashboard-master/js/material-dashboard.js?v=2.1.2" type="text/javascript"></script>
 <script>
 	var dataNum = 0;
-	$(document).ready(function(){
+	
+	//設定名の部分を作成する
+	const createSettingNameElement = (settingName) => {
+	
+		let settingNameList = getSettingNameList();
+		//設定名
+		var tag = '<div class="row">';
+		tag += ' <div class="col-md-5">';
+		tag += '  <div class="form-group">';
+		tag += '    <label class="bmd-label-floating">設定名</label>';
+		tag += '    <input type="text" class="form-control" id="settingName" value="'+settingName+'">';
+		tag += '  </div>';
+		tag += ' </div>';
+		//設定リスト
+		if( settingNameList != null && settingNameList.length > 0){
+			tag += ' <div class="col-md-2 d-flex align-items-center text-right">';
+			tag += '   設定リスト';
+			tag += ' </div>';
+			tag += ' <div class="col-md-3">';
+			tag += '  <div class="form-group">';
+			tag += '    <select class="form-control" id="settingNameSelect">';
+			for( i = 0; i < settingNameList.length;i++){
+				tag += '      <option value="'+settingNameList[i]+'"'+( settingNameList[i] == settingName ? "selected":"") +'>'+settingNameList[i]+'</option>';
+			}
+			tag += '    </select>';
+			tag += '  </div>';
+			tag += ' </div>';
+			//設定ボタン
+			tag += ' <div class="col-md-2">';
+			tag += '    <button type="button" class="btn btn-primary" id="setting-dsp">表示</button>';
+			tag += ' </div>';
+		}
+		tag += '</div>';
+		
+		$(".setting-list").append(tag);
+	}
+	
+	//設定する
+	const createSettingInput = (settingName)=>{
+	
+		//設定名に関する部分を作成する
+		createSettingNameElement(settingName);
+		 
 		//現在の設定を取得
-		var list = loadSetting();
+		var list = loadSetting(settingName);
 		
 		if( list != null ){
-		
 			for( i = 0; i < list.length; i++){
 				var tag = '<div class="row">';
 				tag += ' <div class="col-md-1">';
@@ -128,6 +176,28 @@
 			}
 		
 		}
+	}
+	
+	$(document).ready(function(){
+		let settingName = "";	//起動時に読み込む設定値
+		//設定値のパラメータがあるかのチェック
+		var snIndex = location.search.indexOf("sn=");
+		if( snIndex >= 0 ){
+			//snで起動引数があるなら、それを設定とする
+			settingName = decodeURI(location.search.slice(snIndex+3));
+		}
+		
+		//設定値が無いのならば、前回の設定値をデフォルトとする
+		if( settingName == null || settingName.length == 0){
+			//最後に設定した競って名を取得
+			settingName = getLastSettingName();
+		}
+		//alert(settingName);
+		
+		dataNum = 0;
+		//設定を反映する
+		createSettingInput(settingName);
+		
 	});
 	
 	$("#setting-add").on("click",function(){
@@ -168,7 +238,17 @@
 		 $(".setting-list").append(tag);
 	});
 	
-	$("#setting-entry").on("click",function(){
+	//表示ボタンクリック（選択された設定名をロードする）
+	$(document).on("click","#setting-dsp",function(){
+		var selectedSettingName = $("#settingNameSelect").val();
+		//設定を反映する
+		 $(".setting-list").html("");
+		dataNum = 0;
+		createSettingInput(selectedSettingName);
+	});
+	
+	//設定を保存する
+	const saveSetting = () =>{
 		var jsonParam = null;
 		
 		//値を取得する
@@ -205,6 +285,7 @@
 				jsonParam.push( wkJson );
 			}
 		}
+		var settingName = $("#settingName").val();
 		//ソートする
 		jsonParam.sort(compare);
 		//念のためページ番号を振りなおす（歯抜け防止）
@@ -212,7 +293,16 @@
 			jsonParam[i].page = i+1;
 		}
 		//データを作成しなおす
-		insertJSONList( jsonParam );
+		insertJSONList( settingName,jsonParam );
+		//設定名も保存する
+		insertSettingNameToList(settingName);
+	}
+	//登録ボタンクリック
+	$("#setting-entry").on("click",function(){
+		
+		//設定を保存する
+		saveSetting();
+		
 		alert("登録が完了しました");
 	});
 	
@@ -228,8 +318,16 @@
 
     
 	$("#start").on("click",function(){
+		//設定を保存する
+		saveSetting();
+		
 		ipcRenderer.send('resize');
 		window.location.href="index.html";
 	});
+	
+	$("#close").on("click",function(){
+		ipcRenderer.send('close');
+	});
+	
 </script>
 </html>

@@ -26,6 +26,7 @@ var query = location.search;
 var valuelist = query.split('=');
 var value = 1;
 var timer;
+var loadingTimer;
 
 
 const changeDisp = ()=>{
@@ -55,6 +56,10 @@ if( pageSetting.time != undefined && pageSetting.time > 0 ){
 if( isTimeIn(pageSetting) == false){
 	changeDisp();
 }
+
+//ローディングタイマー（5秒以内に動画開始にならない場合は次の画面へ）
+//ロードに時間がかかる場合や、再生不可の動画はこれに引っかかる
+loadingTimer = setTimeout(changeDisp,5*1000);
 
   /*動画のアスペクト比が16:9以外の時はmovie_reSizeの第二引数で指定してください。*/
   
@@ -141,19 +146,38 @@ if( isTimeIn(pageSetting) == false){
   
   
   function onPlayerReady(e) {
-    //e.target.mute();//音声ミュート
+  	//console.log("onPlayerReady:"+e);
+  	
+  	
     e.target.playVideo();//動画スタート（SP用）
   }
   function onPlayerStateChange(e){
   	//alert(e.data);
     if(e.data == YT.PlayerState.ENDED){
+  		if(loadingTimer != null ) window.clearTimeout(loadingTimer);	
     	value = getNextPage( parseInt(value) );
     	//alert("ENDED:"+value);
     	//次ページ切り替え
     	changeNextPage(value);
     }
+    else if( e.data == YT.PlayerState.PLAYING){
+    	if(loadingTimer != null ) window.clearTimeout(loadingTimer);
+    	//alert("PLAYING:"+value);
+    }
+    else if( e.data == YT.PlayerState.PAUSED){
+    	//alert("PAUSED:"+value);
+    }
+    else if( e.data == YT.PlayerState.BUFFERING){
+    	//alert("PAUSED:"+value);
+    }
+    else if( e.data == YT.PlayerState.BUFFERING){
+    	//alert("CUED:"+value);
+    }
   }
+  
+  //エラー発生時
   function onError(e){
+  	//alert("onError:"+e);
 	value = getNextPage( parseInt(value) );
 	//alert("ENDED:"+value);
 	//次ページ切り替え
