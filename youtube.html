@@ -27,6 +27,8 @@ var valuelist = query.split('=');
 var value = 1;
 var timer;
 var loadingTimer;
+var player;
+
 
 
 const changeDisp = ()=>{
@@ -57,9 +59,6 @@ if( isTimeIn(pageSetting) == false){
 	changeDisp();
 }
 
-//ローディングタイマー（5秒以内に動画開始にならない場合は次の画面へ）
-//ロードに時間がかかる場合や、再生不可の動画はこれに引っかかる
-loadingTimer = setTimeout(changeDisp,5*1000);
 
   /*動画のアスペクト比が16:9以外の時はmovie_reSizeの第二引数で指定してください。*/
   
@@ -112,7 +111,6 @@ loadingTimer = setTimeout(changeDisp,5*1000);
   tag.src = "https://www.youtube.com/iframe_api";
   var firstScriptTag = document.getElementsByTagName('script')[0];
   firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-  var player;
   function onYouTubeIframeAPIReady() {
     var movieId = pageSetting.value; //'8Ayz1oxy6pY';//youtubeの動画のID。再生したい動画のIDを入力。
     player = new YT.Player('movie', {
@@ -137,18 +135,33 @@ loadingTimer = setTimeout(changeDisp,5*1000);
       videoId:  movieId,
       events: {
         'onReady': onPlayerReady,//動画の準備ができたらonPlayerReadyを実行
-        'onStateChange': onPlayerStateChange,
+        
         'onError': onError,
       }
+    });
+    
+    //リスナー登録（2020/9/16修正：こうしないとイベントが来ない？！）
+    player.addEventListener('onStateChange', function(e) {
+        onPlayerStateChange(e);
     });
   }
   const movie = document.querySelector("#movie");      // フルスクリーンにするオブジェクト
   
+  //ロードタイムアウト処理
+  const loadTimeout = ()=>{
+    var state = player.getPlayerState();
+    
+    if( state != YT.PlayerState.PLAYING && state != YT.PlayerState.CUED ){
+      changeDisp();
+    }
+  }
   
+  
+  //ローディングタイマー（5秒以内に動画開始にならない場合は次の画面へ）
+  //ロードに時間がかかる場合や、再生不可の動画はこれに引っかかる
+  loadingTimer = setTimeout(loadTimeout,5*1000);
+
   function onPlayerReady(e) {
-  	//console.log("onPlayerReady:"+e);
-  	
-  	
     e.target.playVideo();//動画スタート（SP用）
   }
   function onPlayerStateChange(e){
@@ -163,6 +176,10 @@ loadingTimer = setTimeout(changeDisp,5*1000);
     else if( e.data == YT.PlayerState.PLAYING){
     	if(loadingTimer != null ) window.clearTimeout(loadingTimer);
     	//alert("PLAYING:"+value);
+    }
+    else if( e.data == YT.PlayerState.CUED){
+    	if(loadingTimer != null ) window.clearTimeout(loadingTimer);
+    	//alert("CUED:"+value);
     }
     else if( e.data == YT.PlayerState.PAUSED){
     	//alert("PAUSED:"+value);
