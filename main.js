@@ -40,16 +40,24 @@ function createWindow() {
   // （今回はmain.jsと同じディレクトリのsetting.html）
   let args = process.argv;
   let settingName = "";
+  let param = "";
   //引数で設定名を指定されたかを確認する
   if( args != null ){
     for( i = 0; i < args.length; i++ ){
        let index = args[i].indexOf("sn=");
        if( index >= 0 ){
-          settingName = args[i];
+          param = args[i];
+       }
+       index = args[i].indexOf("--start");
+       if( index >= 0 ){
+          if( param != "" ){
+             param += "&";
+          }
+          param += "startflg=true";
        }
     }
   }
-  mainWindow.loadFile('setting.html',{search:settingName});
+  mainWindow.loadFile('setting.html',{search:param});
 
   // デベロッパーツールの起動
   //mainWindow.webContents.openDevTools();

@@ -84,7 +84,6 @@
   <script src="material-dashboard-master/js/material-dashboard.js?v=2.1.2" type="text/javascript"></script>
 <script>
 	var dataNum = 0;
-
 	
 	//設定名の部分を作成する
 	const createSettingNameElement = (settingName) => {
@@ -181,11 +180,24 @@
 	
 	$(document).ready(function(){
 		let settingName = "";	//起動時に読み込む設定値
+		
 		//設定値のパラメータがあるかのチェック
 		var snIndex = location.search.indexOf("sn=");
 		if( snIndex >= 0 ){
 			//snで起動引数があるなら、それを設定とする
-			settingName = decodeURI(location.search.slice(snIndex+3));
+			var andIndex = location.search.indexOf("&");
+			if( andIndex > 0 ){
+				settingName = decodeURI(location.search.slice(snIndex+3,andIndex));
+			}else{
+				settingName = decodeURI(location.search.slice(snIndex+3));
+			}
+			//alert(settingName);
+		}
+		var startIndex = location.search.indexOf("startflg");
+		var startflg = false;
+		if( startIndex > 0 ){
+			startflg = decodeURI(location.search.slice(startIndex+9));
+			//alert(startflg);
 		}
 		
 		//設定値が無いのならば、前回の設定値をデフォルトとする
@@ -193,12 +205,15 @@
 			//最後に設定した競って名を取得
 			settingName = getLastSettingName();
 		}
-		//alert(settingName);
 		
 		dataNum = 0;
 		//設定を反映する
 		createSettingInput(settingName);
 		
+		if( startflg == "true" ){
+			//スタートが指定されていればスタートする
+			start();
+		}
 	});
 	
 	$("#setting-add").on("click",function(){
@@ -287,7 +302,6 @@
 			}
 		}
 		var settingName = $("#settingName").val();
-
 		//ソートする
 		jsonParam.sort(compare);
 		//念のためページ番号を振りなおす（歯抜け防止）
@@ -296,7 +310,6 @@
 		}
 		//データを作成しなおす
 		insertJSONList( settingName,jsonParam );
-
 		//設定名も保存する
 		insertSettingNameToList(settingName);
 	}
@@ -305,7 +318,7 @@
 		
 		//設定を保存する
 		saveSetting();
-
+		
 		alert("登録が完了しました");
 	});
 	
@@ -321,16 +334,20 @@
 
     
 	$("#start").on("click",function(){
-		//設定を保存する
-		saveSetting();
 		
-		ipcRenderer.send('resize');
-		window.location.href="index.html";
+		start();
 	});
 	
 	$("#close").on("click",function(){
 		ipcRenderer.send('close');
 	});
+	
+	const start = ()=>{
+		//設定を保存する
+		saveSetting();
+		ipcRenderer.send('resize');
+		window.location.href="index.html";
+	}
 	
 </script>
 </html>

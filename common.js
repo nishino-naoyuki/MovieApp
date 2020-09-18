@@ -3,6 +3,8 @@ const TYPE_YOUTUBE = 1;
 const NO_REPEAT = 0;
 const REPEAT = -1;
 
+const close = () =>{
+}
 
 const loadSetting = (settingName) =>{
 	var getjson = localStorage.getItem(settingName);
@@ -24,7 +26,6 @@ const clearSettingForDebug = (settingName) =>{
 const insertStorage = (settingName,page,type,value,time,startTime,endTime,repeat=NO_REPEAT) => {
 	//現状を読み込み
 	var list = loadSetting(settingName);
-
 	
 	//設定を追加
 	var addData = {"page":1,"type":1,"value":1,"startTime":0,"endTime":0,"repeat":0,"time":0};
@@ -52,7 +53,6 @@ const getLastSettingName = () =>{
 	var lastSetting = localStorage.getItem("last_setting");
 	//alert(getjson);
 	if( lastSetting == null || lastSetting == "" ){
-
 		return "新規設定名";
 	}
 	
@@ -128,7 +128,6 @@ const getStorage = (page) => {
 
 //ページ切り替え
 const changeNextPage = (nextpage)=>{
-
 	//次ページの情報を取得
 	var netxtPage = getStorage(nextpage);
 	if( netxtPage == null ){
